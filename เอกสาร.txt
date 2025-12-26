@@ -1,0 +1,1489 @@
+MySQL [db_food_68319010045]> SELECT
+    ->     TABLE_NAME,
+    ->     COLUMN_NAME,
+    ->     COLUMN_TYPE,
+    ->     IS_NULLABLE,
+    ->     COLUMN_KEY,
+    ->     EXTRA
+    -> FROM information_schema.COLUMNS
+    -> WHERE TABLE_SCHEMA = DATABASE()
+    -> ORDER BY TABLE_NAME, ORDINAL_POSITION;
++-----------------+-------------------+---------------+-------------+------------+----------------+
+| TABLE_NAME      | COLUMN_NAME       | COLUMN_TYPE   | IS_NULLABLE | COLUMN_KEY | EXTRA          |
++-----------------+-------------------+---------------+-------------+------------+----------------+
+| tbl_customers   | id                | int           | NO          | PRI        | auto_increment |
+| tbl_customers   | username          | varchar(50)   | NO          |            |                |
+| tbl_customers   | password          | varchar(50)   | NO          |            |                |
+| tbl_customers   | fullname          | varchar(100)  | NO          |            |                |
+| tbl_customers   | address           | text          | YES         |            |                |
+| tbl_customers   | phone             | varchar(20)   | YES         |            |                |
+| tbl_customers   | email             | varchar(100)  | YES         |            |                |
+| tbl_menus       | id                | int           | NO          | PRI        | auto_increment |
+| tbl_menus       | restaurant_id     | int           | YES         |            |                |
+| tbl_menus       | menu_name         | varchar(100)  | YES         |            |                |
+| tbl_menus       | description       | text          | YES         |            |                |
+| tbl_menus       | price             | decimal(10,2) | YES         |            |                |
+| tbl_menus       | category          | varchar(50)   | YES         |            |                |
+| tbl_orders      | id                | int           | NO          | PRI        | auto_increment |
+| tbl_orders      | customer_id       | int           | YES         |            |                |
+| tbl_orders      | restaurant_id     | int           | YES         |            |                |
+| tbl_orders      | menu_id           | int           | YES         |            |                |
+| tbl_orders      | quantity          | int           | YES         |            |                |
+| tbl_orders      | total_amount      | decimal(10,2) | YES         |            |                |
+| tbl_orders      | order_status      | varchar(50)   | YES         |            |                |
+| tbl_payments    | id                | int           | NO          | PRI        | auto_increment |
+| tbl_payments    | order_id          | int           | YES         |            |                |
+| tbl_payments    | payment_method    | varchar(50)   | YES         |            |                |
+| tbl_payments    | payment_status    | varchar(50)   | YES         |            |                |
+| tbl_restaurants | id                | int           | NO          | PRI        | auto_increment |
+| tbl_restaurants | name              | varchar(100)  | YES         |            |                |
+| tbl_restaurants | address           | text          | YES         |            |                |
+| tbl_restaurants | phone             | varchar(20)   | YES         |            |                |
+| tbl_restaurants | menu_details      | text          | YES         |            |                |
+| tbl_shippings   | id                | int           | NO          | PRI        | auto_increment |
+| tbl_shippings   | order_id          | int           | YES         |            |                |
+| tbl_shippings   | recipient_name    | varchar(100)  | YES         |            |                |
+| tbl_shippings   | recipient_address | text          | YES         |            |                |
+| tbl_shippings   | recipient_phone   | varchar(20)   | YES         |            |                |
+| tbl_shippings   | shipping_status   | varchar(50)   | YES         |            |                |
+| v_customers     | id                | int           | NO          |            |                |
+| v_customers     | username          | varchar(50)   | NO          |            |                |
+| v_customers     | password          | varchar(50)   | NO          |            |                |
+| v_customers     | fullname          | varchar(100)  | NO          |            |                |
+| v_customers     | address           | text          | YES         |            |                |
+| v_customers     | phone             | varchar(20)   | YES         |            |                |
+| v_customers     | email             | varchar(100)  | YES         |            |                |
+| v_menus         | id                | int           | NO          |            |                |
+| v_menus         | restaurant_id     | int           | YES         |            |                |
+| v_menus         | menu_name         | varchar(100)  | YES         |            |                |
+| v_menus         | description       | text          | YES         |            |                |
+| v_menus         | price             | decimal(10,2) | YES         |            |                |
+| v_menus         | category          | varchar(50)   | YES         |            |                |
+| v_orders        | customer_id       | int           | NO          |            |                |
+| v_orders        | firstname         | varchar(100)  | YES         |            |                |
+| v_orders        | lastname          | varchar(100)  | YES         |            |                |
+| v_orders        | menu_id           | int           | YES         |            |                |
+| v_orders        | quantity          | int           | YES         |            |                |
+| v_orders        | total_amount      | decimal(10,2) | YES         |            |                |
+| v_payments      | id                | int           | NO          |            |                |
+| v_payments      | order_id          | int           | YES         |            |                |
+| v_payments      | payment_method    | varchar(50)   | YES         |            |                |
+| v_payments      | payment_status    | varchar(50)   | YES         |            |                |
+| v_shippings     | id                | int           | NO          |            |                |
+| v_shippings     | order_id          | int           | YES         |            |                |
+| v_shippings     | recipient_name    | varchar(100)  | YES         |            |                |
+| v_shippings     | recipient_address | text          | YES         |            |                |
+| v_shippings     | recipient_phone   | varchar(20)   | YES         |            |                |
+| v_shippings     | shipping_status   | varchar(50)   | YES         |            |                |
++-----------------+-------------------+---------------+-------------+------------+----------------+
+64 rows in set (0.004 sec)
+045 BackEnd/
+├── config/
+│   ├── db.js
+│   └── swagger.js
+├── middleware/
+│   └── auth.js
+├── node_modules/
+├── routes/
+│   ├── customers.js
+│   ├── menus.js
+│   ├── orders.js
+│   ├── payments.js
+│   ├── restaurants.js
+│   └── shippings.js
+├── tests/
+│   └── integration.test.js
+├── .env
+├── index.js
+├── package-lock.json
+└── package.json
+package.json
+{
+  "name": "food-delivery-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest --detectOpenHandles"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.9.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "nodemon": "^3.0.0"
+  }
+}
+
+# Database connection
+DB_HOST=49.229.108.173
+DB_PORT=3308
+DB_USER=it68b
+DB_PASS=it68b@2025
+DB_NAME=db_food_68319010045
+
+# Server
+PORT=3000
+
+# Security (ต้องใส่ ไม่งั้น Login ไม่ได้)
+JWT_SECRET=MySuperSecretKey_123456
+
+// index.js
+const express = require('express');
+const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./config/swagger'); // Import ไฟล์ config ที่เราแยกไป
+require('dotenv').config();
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Swagger Route
+// เรียกใช้ swaggerUi.setup โดยส่งค่า config ที่ import เข้ามา
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// Routes
+app.use('/api/customers', require('./routes/customers'));
+app.use('/api/restaurants', require('./routes/restaurants'));
+app.use('/api/menus', require('./routes/menus'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/shippings', require('./routes/shippings'));
+
+// Health Check
+app.get('/', (req, res) => res.send('API Running... Docs at /api-docs'));
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+});
+
+// Start Server
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
+
+// config/db.js
+const mysql = require('mysql2');
+require('dotenv').config();
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT || 3306, // เพิ่มบรรทัดนี้เพื่อรองรับ Port 3308
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,     // แก้ให้ตรงกับ .env (จาก DB_PASSWORD เป็น DB_PASS)
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+module.exports = pool.promise();
+
+// config/swagger.js
+const swaggerJsDoc = require('swagger-jsdoc');
+require('dotenv').config();
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Food Delivery API',
+      version: '1.0.0',
+      description: 'API for Managing Food Delivery System'
+    },
+    servers: [{ url: `http://localhost:${process.env.PORT || 3000}` }],
+    components: {
+      securitySchemes: {
+        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
+      }
+    },
+    security: [{ bearerAuth: [] }]
+  },
+  // ระบุ Path ของไฟล์ Route ที่เราเขียน Docs ไว้
+  // หมายเหตุ: Path นี้อ้างอิงจาก Root ของโปรเจกต์ (ที่ไฟล์ index.js อยู่)
+  apis: ['./routes/*.js']
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+
+module.exports = swaggerDocs;
+
+// middleware/auth.js
+const jwt = require('jsonwebtoken');
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1]; // Format: Bearer <token>
+
+  if (!token) {
+    return res.status(403).json({ message: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // เก็บข้อมูล user ไว้ใช้ใน route ถัดไป
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid Token' });
+  }
+};
+
+module.exports = verifyToken;
+
+// tests/integration.test.js
+const request = require('supertest');
+const app = require('../index'); // Import app
+const db = require('../config/db');
+
+describe('Full System Integration Tests', () => {
+  let token = '';
+  let customerId = '';
+  let restaurantId = '';
+  let menuId = '';
+  let orderId = '';
+  let paymentId = '';
+  let shippingId = '';
+
+  const testUser = {
+    username: 'testuser_fullsystem',
+    password: 'password123',
+    fullname: 'Test Full System',
+    address: '123 Test Street',
+    phone: '0812345678',
+    email: 'testfull@example.com'
+  };
+
+  // --- Setup & Teardown ---
+  beforeAll(async () => {
+    // ล้างข้อมูลเก่าที่อาจค้างอยู่ (ลบย้อนกลับเพื่อเลี่ยง Foreign Key Error)
+    await db.query('DELETE FROM tbl_shippings');
+    await db.query('DELETE FROM tbl_payments');
+    await db.query('DELETE FROM tbl_orders');
+    await db.query('DELETE FROM tbl_menus');
+    await db.query('DELETE FROM tbl_restaurants');
+    await db.query('DELETE FROM tbl_customers WHERE username = ?', [testUser.username]);
+  });
+
+  afterAll(async () => {
+    // ล้างข้อมูลหลังจบการทดสอบ
+    await db.query('DELETE FROM tbl_shippings WHERE id = ?', [shippingId]);
+    await db.query('DELETE FROM tbl_payments WHERE id = ?', [paymentId]);
+    await db.query('DELETE FROM tbl_orders WHERE id = ?', [orderId]);
+    await db.query('DELETE FROM tbl_menus WHERE id = ?', [menuId]);
+    await db.query('DELETE FROM tbl_restaurants WHERE id = ?', [restaurantId]);
+    await db.query('DELETE FROM tbl_customers WHERE id = ?', [customerId]);
+    
+    await db.end(); // ปิด Connection DB
+  });
+
+  // ==========================================
+  // 1. CUSTOMERS & AUTHENTICATION
+  // ==========================================
+  describe('Authentication & Customers', () => {
+    test('POST /register - Should register a new user', async () => {
+      const res = await request(app).post('/api/customers/register').send(testUser);
+      expect(res.statusCode).toEqual(201);
+    });
+
+    test('POST /login - Should login and return token', async () => {
+      const res = await request(app).post('/api/customers/login').send({
+        username: testUser.username,
+        password: testUser.password
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty('token');
+      token = res.body.token; // เก็บ Token ไว้ใช้
+      customerId = res.body.user.id; // เก็บ ID ไว้ใช้
+    });
+
+    test('GET /customers - Should get all customers (Protected)', async () => {
+      const res = await request(app).get('/api/customers').set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+      expect(Array.isArray(res.body)).toBeTruthy();
+    });
+
+    test('PUT /customers/:id - Should update customer info', async () => {
+      const res = await request(app)
+        .put(`/api/customers/${customerId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...testUser, fullname: 'Updated Name' });
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+  // ==========================================
+  // 2. RESTAURANTS (CRUD)
+  // ==========================================
+  describe('Restaurants API', () => {
+    test('POST /restaurants - Should create a restaurant', async () => {
+      const res = await request(app)
+        .post('/api/restaurants')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          name: 'Test Restaurant',
+          address: 'Rest Address',
+          phone: '029999999',
+          menu_details: 'Thai Food'
+        });
+      expect(res.statusCode).toEqual(201);
+      restaurantId = res.body.id; // เก็บ Restaurant ID
+    });
+
+    test('GET /restaurants - Should list restaurants', async () => {
+      const res = await request(app).get('/api/restaurants');
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.length).toBeGreaterThan(0);
+    });
+
+    test('PUT /restaurants/:id - Should update restaurant', async () => {
+      const res = await request(app)
+        .put(`/api/restaurants/${restaurantId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Updated Restaurant', address: 'New Addr', phone: '028888888', menu_details: 'Fusion' });
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+  // ==========================================
+  // 3. MENUS (CRUD)
+  // ==========================================
+  describe('Menus API', () => {
+    test('POST /menus - Should create a menu item', async () => {
+      const res = await request(app)
+        .post('/api/menus')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          restaurant_id: restaurantId,
+          menu_name: 'Pad Thai',
+          description: 'Delicious noodles',
+          price: 150.00,
+          category: 'Main Course'
+        });
+      expect(res.statusCode).toEqual(201);
+      menuId = res.body.id; // เก็บ Menu ID
+    });
+
+    test('GET /menus - Should list menus', async () => {
+      const res = await request(app).get('/api/menus');
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('PUT /menus/:id - Should update menu', async () => {
+      const res = await request(app)
+        .put(`/api/menus/${menuId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          restaurant_id: restaurantId,
+          menu_name: 'Pad Thai Special',
+          description: 'More shrimp',
+          price: 180.00,
+          category: 'Main Course'
+        });
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+  // ==========================================
+  // 4. ORDERS (CRUD)
+  // ==========================================
+  describe('Orders API', () => {
+    test('POST /orders - Should create an order', async () => {
+      const res = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          customer_id: customerId,
+          restaurant_id: restaurantId,
+          menu_id: menuId,
+          quantity: 2,
+          total_amount: 360.00,
+          order_status: 'Pending'
+        });
+      expect(res.statusCode).toEqual(201);
+      orderId = res.body.id; // เก็บ Order ID
+    });
+
+    test('GET /orders - Should list orders', async () => {
+      const res = await request(app).get('/api/orders').set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('PUT /orders/:id - Should update order status', async () => {
+      const res = await request(app)
+        .put(`/api/orders/${orderId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ order_status: 'Confirmed' });
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+  // ==========================================
+  // 5. PAYMENTS (CRUD)
+  // ==========================================
+  describe('Payments API', () => {
+    test('POST /payments - Should create a payment', async () => {
+      const res = await request(app)
+        .post('/api/payments')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          order_id: orderId,
+          payment_method: 'Credit Card',
+          payment_status: 'Pending'
+        });
+      expect(res.statusCode).toEqual(201);
+      paymentId = res.body.id;
+    });
+
+    test('PUT /payments/:id - Should update payment status', async () => {
+      const res = await request(app)
+        .put(`/api/payments/${paymentId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ payment_status: 'Completed' });
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+  // ==========================================
+  // 6. SHIPPINGS (CRUD)
+  // ==========================================
+  describe('Shippings API', () => {
+    test('POST /shippings - Should create shipping info', async () => {
+      const res = await request(app)
+        .post('/api/shippings')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          order_id: orderId,
+          recipient_name: 'Test Recipient',
+          recipient_address: 'Shipping Address',
+          recipient_phone: '0899999999',
+          shipping_status: 'Preparing'
+        });
+      expect(res.statusCode).toEqual(201);
+      shippingId = res.body.id;
+    });
+
+    test('PUT /shippings/:id - Should update shipping status', async () => {
+      const res = await request(app)
+        .put(`/api/shippings/${shippingId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ shipping_status: 'Delivered' });
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+  // ==========================================
+  // 7. CLEANUP (DELETE TESTS)
+  // ==========================================
+  describe('Delete Operations (Cleanup)', () => {
+    // ต้องลบย้อนกลับตามลำดับ Foreign Keys
+    
+    test('DELETE /shippings/:id', async () => {
+      const res = await request(app).delete(`/api/shippings/${shippingId}`).set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('DELETE /payments/:id', async () => {
+      const res = await request(app).delete(`/api/payments/${paymentId}`).set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('DELETE /orders/:id', async () => {
+      const res = await request(app).delete(`/api/orders/${orderId}`).set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('DELETE /menus/:id', async () => {
+      const res = await request(app).delete(`/api/menus/${menuId}`).set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('DELETE /restaurants/:id', async () => {
+      const res = await request(app).delete(`/api/restaurants/${restaurantId}`).set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+
+    test('DELETE /customers/:id', async () => {
+      const res = await request(app).delete(`/api/customers/${customerId}`).set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toEqual(200);
+    });
+  });
+
+});
+
+// routes/customers.js
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * tags:
+ * name: Customers
+ * description: API สำหรับจัดการข้อมูลลูกค้าและการเข้าสู่ระบบ
+ */
+
+/**
+ * @swagger
+ * components:
+ * schemas:
+ * CustomerRegister:
+ * type: object
+ * required:
+ * - username
+ * - password
+ * - fullname
+ * properties:
+ * username:
+ * type: string
+ * password:
+ * type: string
+ * fullname:
+ * type: string
+ * address:
+ * type: string
+ * phone:
+ * type: string
+ * email:
+ * type: string
+ * LoginRequest:
+ * type: object
+ * required:
+ * - username
+ * - password
+ * properties:
+ * username:
+ * type: string
+ * password:
+ * type: string
+ */
+
+/**
+ * @swagger
+ * /api/customers/register:
+ * post:
+ * summary: ลงทะเบียนลูกค้าใหม่ (Register)
+ * tags: [Customers]
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/CustomerRegister'
+ * responses:
+ * 201:
+ * description: สร้างบัญชีสำเร็จ
+ * 400:
+ * description: Username ซ้ำ
+ * 500:
+ * description: Server Error
+ */
+router.post('/register', async (req, res) => {
+  try {
+    const { username, password, fullname, address, phone, email } = req.body;
+    const [existing] = await db.query('SELECT * FROM tbl_customers WHERE username = ?', [username]);
+    if (existing.length > 0) return res.status(400).send('Username already exists');
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const sql = 'INSERT INTO tbl_customers (username, password, fullname, address, phone, email) VALUES (?, ?, ?, ?, ?, ?)';
+    await db.query(sql, [username, hashedPassword, fullname, address, phone, email]);
+
+    res.status(201).send('User registered successfully');
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+/**
+ * @swagger
+ * /api/customers/login:
+ * post:
+ * summary: เข้าสู่ระบบ (Login)
+ * tags: [Customers]
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/LoginRequest'
+ * responses:
+ * 200:
+ * description: ล็อกอินสำเร็จ (คืนค่า Token)
+ * 400:
+ * description: รหัสผ่านผิด
+ * 404:
+ * description: ไม่พบผู้ใช้งาน
+ */
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const [users] = await db.query('SELECT * FROM tbl_customers WHERE username = ?', [username]);
+    if (users.length === 0) return res.status(404).send('User not found');
+    
+    const user = users[0];
+    const validPass = await bcrypt.compare(password, user.password);
+    if (!validPass) return res.status(400).send('Invalid password');
+
+    const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '2h' });
+    res.json({ token, user: { id: user.id, fullname: user.fullname } });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+/**
+ * @swagger
+ * /api/customers:
+ * get:
+ * summary: ดึงข้อมูลลูกค้าทั้งหมด (ต้องใช้ Token)
+ * tags: [Customers]
+ * security:
+ * - bearerAuth: []
+ * responses:
+ * 200:
+ * description: รายชื่อลูกค้าทั้งหมด
+ * 401:
+ * description: ไม่ได้รับอนุญาต (Token ไม่ถูกต้อง)
+ */
+router.get('/', auth, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT id, username, fullname, address, phone, email FROM tbl_customers');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+/**
+ * @swagger
+ * /api/customers/{id}:
+ * get:
+ * summary: ดึงข้อมูลลูกค้าตาม ID
+ * tags: [Customers]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * schema:
+ * type: integer
+ * required: true
+ * description: ไอดีลูกค้า
+ * responses:
+ * 200:
+ * description: ข้อมูลลูกค้า
+ * 404:
+ * description: ไม่พบข้อมูล
+ * put:
+ * summary: แก้ไขข้อมูลลูกค้า
+ * tags: [Customers]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * requestBody:
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * fullname:
+ * type: string
+ * address:
+ * type: string
+ * phone:
+ * type: string
+ * email:
+ * type: string
+ * responses:
+ * 200:
+ * description: อัปเดตข้อมูลสำเร็จ
+ * delete:
+ * summary: ลบข้อมูลลูกค้า
+ * tags: [Customers]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * responses:
+ * 200:
+ * description: ลบข้อมูลสำเร็จ
+ */
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT id, username, fullname, address, phone, email FROM tbl_customers WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).send('Customer not found');
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { fullname, address, phone, email } = req.body;
+    await db.query('UPDATE tbl_customers SET fullname=?, address=?, phone=?, email=? WHERE id=?', 
+      [fullname, address, phone, email, req.params.id]);
+    res.send('Customer updated');
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    await db.query('DELETE FROM tbl_customers WHERE id = ?', [req.params.id]);
+    res.send('Customer deleted');
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+module.exports = router;
+
+// routes/menus.js
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * tags:
+ * name: Menus
+ * description: จัดการเมนูอาหาร
+ */
+
+/**
+ * @swagger
+ * components:
+ * schemas:
+ * Menu:
+ * type: object
+ * required:
+ * - restaurant_id
+ * - menu_name
+ * - price
+ * properties:
+ * restaurant_id:
+ * type: integer
+ * menu_name:
+ * type: string
+ * description:
+ * type: string
+ * price:
+ * type: number
+ * format: float
+ * category:
+ * type: string
+ */
+
+/**
+ * @swagger
+ * /api/menus:
+ * get:
+ * summary: ดูรายการเมนูทั้งหมด
+ * tags: [Menus]
+ * responses:
+ * 200:
+ * description: รายการเมนู
+ * post:
+ * summary: เพิ่มเมนูใหม่
+ * tags: [Menus]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Menu'
+ * responses:
+ * 201:
+ * description: สร้างเมนูสำเร็จ
+ */
+router.get('/', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_menus');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.post('/', auth, async (req, res) => {
+    const { restaurant_id, menu_name, description, price, category } = req.body;
+    try {
+        const sql = 'INSERT INTO tbl_menus (restaurant_id, menu_name, description, price, category) VALUES (?, ?, ?, ?, ?)';
+        const [result] = await db.query(sql, [restaurant_id, menu_name, description, price, category]);
+        res.status(201).json({ id: result.insertId, ...req.body });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+/**
+ * @swagger
+ * /api/menus/{id}:
+ * put:
+ * summary: แก้ไขเมนู
+ * tags: [Menus]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Menu'
+ * responses:
+ * 200:
+ * description: อัปเดตสำเร็จ
+ * delete:
+ * summary: ลบเมนู
+ * tags: [Menus]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * responses:
+ * 200:
+ * description: ลบสำเร็จ
+ */
+router.put('/:id', auth, async (req, res) => {
+    const { restaurant_id, menu_name, description, price, category } = req.body;
+    try {
+        const sql = 'UPDATE tbl_menus SET restaurant_id=?, menu_name=?, description=?, price=?, category=? WHERE id=?';
+        await db.query(sql, [restaurant_id, menu_name, description, price, category, req.params.id]);
+        res.send('Menu updated successfully');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        await db.query('DELETE FROM tbl_menus WHERE id = ?', [req.params.id]);
+        res.send('Menu deleted successfully');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+module.exports = router;
+
+// routes/orders.js
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * tags:
+ * name: Orders
+ * description: จัดการคำสั่งซื้อ
+ */
+
+/**
+ * @swagger
+ * components:
+ * schemas:
+ * Order:
+ * type: object
+ * required:
+ * - customer_id
+ * - restaurant_id
+ * - menu_id
+ * - quantity
+ * - total_amount
+ * properties:
+ * customer_id:
+ * type: integer
+ * restaurant_id:
+ * type: integer
+ * menu_id:
+ * type: integer
+ * quantity:
+ * type: integer
+ * total_amount:
+ * type: number
+ * format: float
+ * order_status:
+ * type: string
+ * default: Pending
+ */
+
+/**
+ * @swagger
+ * /api/orders:
+ * get:
+ * summary: ดูออเดอร์ทั้งหมด
+ * tags: [Orders]
+ * security:
+ * - bearerAuth: []
+ * responses:
+ * 200:
+ * description: สำเร็จ
+ * post:
+ * summary: สร้างคำสั่งซื้อ
+ * tags: [Orders]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Order'
+ * responses:
+ * 201:
+ * description: สร้างออเดอร์สำเร็จ
+ */
+router.get('/', auth, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_orders'); 
+        res.json(rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.post('/', auth, async (req, res) => {
+    const { customer_id, restaurant_id, menu_id, quantity, total_amount, order_status } = req.body;
+    try {
+        const sql = 'INSERT INTO tbl_orders (customer_id, restaurant_id, menu_id, quantity, total_amount, order_status) VALUES (?, ?, ?, ?, ?, ?)';
+        const [result] = await db.query(sql, [customer_id, restaurant_id, menu_id, quantity, total_amount, order_status || 'Pending']);
+        res.status(201).json({ id: result.insertId, ...req.body });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+/**
+ * @swagger
+ * /api/orders/{id}:
+ * get:
+ * summary: ดูรายละเอียดออเดอร์ตาม ID
+ * tags: [Orders]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * responses:
+ * 200:
+ * description: พบออเดอร์
+ * put:
+ * summary: อัปเดตสถานะออเดอร์
+ * tags: [Orders]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * order_status:
+ * type: string
+ * example: "Completed"
+ * responses:
+ * 200:
+ * description: อัปเดตสถานะสำเร็จ
+ * delete:
+ * summary: ยกเลิก/ลบออเดอร์
+ * tags: [Orders]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * responses:
+ * 200:
+ * description: ลบสำเร็จ
+ */
+router.get('/:id', auth, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_orders WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).send('Order not found');
+        res.json(rows[0]);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.put('/:id', auth, async (req, res) => {
+    const { order_status } = req.body;
+    try {
+        await db.query('UPDATE tbl_orders SET order_status=? WHERE id=?', [order_status, req.params.id]);
+        res.send(`Order status updated to ${order_status}`);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        await db.query('DELETE FROM tbl_orders WHERE id = ?', [req.params.id]);
+        res.send('Order deleted successfully');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+module.exports = router;
+
+// routes/payments.js
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * tags:
+ * name: Payments
+ * description: จัดการการชำระเงิน
+ */
+
+/**
+ * @swagger
+ * components:
+ * schemas:
+ * Payment:
+ * type: object
+ * required:
+ * - order_id
+ * - payment_method
+ * properties:
+ * order_id:
+ * type: integer
+ * payment_method:
+ * type: string
+ * example: "Credit Card"
+ * payment_status:
+ * type: string
+ * default: "Pending"
+ */
+
+/**
+ * @swagger
+ * /api/payments:
+ * get:
+ * summary: ดูรายการชำระเงินทั้งหมด
+ * tags: [Payments]
+ * security:
+ * - bearerAuth: []
+ * responses:
+ * 200:
+ * description: สำเร็จ
+ * post:
+ * summary: สร้างรายการชำระเงิน
+ * tags: [Payments]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Payment'
+ * responses:
+ * 201:
+ * description: บันทึกการชำระเงินสำเร็จ
+ */
+router.get('/', auth, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_payments');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.post('/', auth, async (req, res) => {
+    const { order_id, payment_method, payment_status } = req.body;
+    try {
+        const sql = 'INSERT INTO tbl_payments (order_id, payment_method, payment_status) VALUES (?, ?, ?)';
+        const [result] = await db.query(sql, [order_id, payment_method, payment_status || 'Pending']);
+        res.status(201).json({ id: result.insertId, ...req.body });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+/**
+ * @swagger
+ * /api/payments/{id}:
+ * put:
+ * summary: อัปเดตสถานะการชำระเงิน
+ * tags: [Payments]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * payment_status:
+ * type: string
+ * example: "Paid"
+ * responses:
+ * 200:
+ * description: อัปเดตสถานะสำเร็จ
+ */
+router.put('/:id', auth, async (req, res) => {
+    const { payment_status } = req.body;
+    try {
+        await db.query('UPDATE tbl_payments SET payment_status=? WHERE id=?', [payment_status, req.params.id]);
+        res.send('Payment status updated');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+module.exports = router;
+
+// routes/restaurants.js
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * tags:
+ * name: Restaurants
+ * description: จัดการข้อมูลร้านอาหาร
+ */
+
+/**
+ * @swagger
+ * components:
+ * schemas:
+ * Restaurant:
+ * type: object
+ * required:
+ * - name
+ * properties:
+ * name:
+ * type: string
+ * address:
+ * type: string
+ * phone:
+ * type: string
+ * menu_details:
+ * type: string
+ */
+
+/**
+ * @swagger
+ * /api/restaurants:
+ * get:
+ * summary: ดูรายชื่อร้านอาหารทั้งหมด
+ * tags: [Restaurants]
+ * responses:
+ * 200:
+ * description: สำเร็จ
+ * post:
+ * summary: เพิ่มร้านอาหารใหม่
+ * tags: [Restaurants]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Restaurant'
+ * responses:
+ * 201:
+ * description: สร้างร้านสำเร็จ
+ */
+router.get('/', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_restaurants');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.post('/', auth, async (req, res) => {
+    const { name, address, phone, menu_details } = req.body;
+    try {
+        const sql = 'INSERT INTO tbl_restaurants (name, address, phone, menu_details) VALUES (?, ?, ?, ?)';
+        const [result] = await db.query(sql, [name, address, phone, menu_details]);
+        res.status(201).json({ id: result.insertId, ...req.body });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+/**
+ * @swagger
+ * /api/restaurants/{id}:
+ * get:
+ * summary: ดูข้อมูลร้านอาหารตาม ID
+ * tags: [Restaurants]
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * responses:
+ * 200:
+ * description: พบข้อมูล
+ * 404:
+ * description: ไม่พบร้านอาหาร
+ * put:
+ * summary: แก้ไขข้อมูลร้านอาหาร
+ * tags: [Restaurants]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Restaurant'
+ * responses:
+ * 200:
+ * description: อัปเดตสำเร็จ
+ * delete:
+ * summary: ลบร้านอาหาร
+ * tags: [Restaurants]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * responses:
+ * 200:
+ * description: ลบสำเร็จ
+ */
+router.get('/:id', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_restaurants WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).send('Restaurant not found');
+        res.json(rows[0]);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.put('/:id', auth, async (req, res) => {
+    const { name, address, phone, menu_details } = req.body;
+    try {
+        const sql = 'UPDATE tbl_restaurants SET name=?, address=?, phone=?, menu_details=? WHERE id=?';
+        await db.query(sql, [name, address, phone, menu_details, req.params.id]);
+        res.send('Restaurant updated successfully');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        await db.query('DELETE FROM tbl_restaurants WHERE id = ?', [req.params.id]);
+        res.send('Restaurant deleted successfully');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+module.exports = router;
+
+// routes/shippings.js
+const express = require('express');
+const router = express.Router();
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+
+/**
+ * @swagger
+ * tags:
+ * name: Shippings
+ * description: จัดการการจัดส่ง
+ */
+
+/**
+ * @swagger
+ * components:
+ * schemas:
+ * Shipping:
+ * type: object
+ * required:
+ * - order_id
+ * - recipient_name
+ * - recipient_address
+ * - recipient_phone
+ * properties:
+ * order_id:
+ * type: integer
+ * recipient_name:
+ * type: string
+ * recipient_address:
+ * type: string
+ * recipient_phone:
+ * type: string
+ * shipping_status:
+ * type: string
+ * default: "Preparing"
+ */
+
+/**
+ * @swagger
+ * /api/shippings:
+ * get:
+ * summary: ดูรายการจัดส่งทั้งหมด
+ * tags: [Shippings]
+ * security:
+ * - bearerAuth: []
+ * responses:
+ * 200:
+ * description: สำเร็จ
+ * post:
+ * summary: สร้างรายการจัดส่ง
+ * tags: [Shippings]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/Shipping'
+ * responses:
+ * 201:
+ * description: สร้างรายการจัดส่งสำเร็จ
+ */
+router.get('/', auth, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM tbl_shippings');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.post('/', auth, async (req, res) => {
+    const { order_id, recipient_name, recipient_address, recipient_phone, shipping_status } = req.body;
+    try {
+        const sql = 'INSERT INTO tbl_shippings (order_id, recipient_name, recipient_address, recipient_phone, shipping_status) VALUES (?, ?, ?, ?, ?)';
+        const [result] = await db.query(sql, [order_id, recipient_name, recipient_address, recipient_phone, shipping_status || 'Preparing']);
+        res.status(201).json({ id: result.insertId, ...req.body });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+/**
+ * @swagger
+ * /api/shippings/{id}:
+ * put:
+ * summary: อัปเดตสถานะการจัดส่ง
+ * tags: [Shippings]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * shipping_status:
+ * type: string
+ * example: "Delivered"
+ * responses:
+ * 200:
+ * description: อัปเดตสถานะสำเร็จ
+ */
+router.put('/:id', auth, async (req, res) => {
+    const { shipping_status } = req.body;
+    try {
+        await db.query('UPDATE tbl_shippings SET shipping_status=? WHERE id=?', [shipping_status, req.params.id]);
+        res.send('Shipping status updated');
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+module.exports = router;
