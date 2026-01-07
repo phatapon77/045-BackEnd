@@ -9,64 +9,70 @@ const auth = require('../middleware/auth');
 /**
  * @swagger
  * tags:
- * name: Customers
- * description: API สำหรับจัดการข้อมูลลูกค้าและการเข้าสู่ระบบ
- */
-
-/**
- * @swagger
- * components:
- * schemas:
- * CustomerRegister:
- * type: object
- * required:
- * - username
- * - password
- * - fullname
- * properties:
- * username:
- * type: string
- * password:
- * type: string
- * fullname:
- * type: string
- * address:
- * type: string
- * phone:
- * type: string
- * email:
- * type: string
- * LoginRequest:
- * type: object
- * required:
- * - username
- * - password
- * properties:
- * username:
- * type: string
- * password:
- * type: string
- */
-
-/**
- * @swagger
+ *   - name: Customers
+ *     description: Customer related endpoints
+ *
  * /api/customers/register:
- * post:
- * summary: ลงทะเบียนลูกค้าใหม่ (Register)
- * tags: [Customers]
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/CustomerRegister'
- * responses:
- * 201:
- * description: สร้างบัญชีสำเร็จ
- * 400:
- * description: Username ซ้ำ
- * 500:
- * description: Server Error
+ *   post:
+ *     summary: Register a new customer
+ *     tags: [Customers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             required: [username, password]
+ *     responses:
+ *       '201':
+ *         description: Customer created
+ *
+ * /api/customers/login:
+ *   post:
+ *     summary: Login a customer
+ *     tags: [Customers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             required: [username, password]
+ *     responses:
+ *       '200':
+ *         description: Logged in
+ *
+ * /api/customers:
+ *   get:
+ *     summary: Get all customers
+ *     tags: [Customers]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *
+ * /api/customers/{id}:
+ *   get:
+ *     summary: Get customer by id
+ *     tags: [Customers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: OK
  */
 router.post('/register', async (req, res) => {
   try {
@@ -86,26 +92,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/customers/login:
- * post:
- * summary: เข้าสู่ระบบ (Login)
- * tags: [Customers]
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/LoginRequest'
- * responses:
- * 200:
- * description: ล็อกอินสำเร็จ (คืนค่า Token)
- * 400:
- * description: รหัสผ่านผิด
- * 404:
- * description: ไม่พบผู้ใช้งาน
- */
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -123,20 +109,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/customers:
- * get:
- * summary: ดึงข้อมูลลูกค้าทั้งหมด (ต้องใช้ Token)
- * tags: [Customers]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: รายชื่อลูกค้าทั้งหมด
- * 401:
- * description: ไม่ได้รับอนุญาต (Token ไม่ถูกต้อง)
- */
 router.get('/', auth, async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, username, fullname, address, phone, email FROM tbl_customers');
@@ -146,69 +118,6 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/customers/{id}:
- * get:
- * summary: ดึงข้อมูลลูกค้าตาม ID
- * tags: [Customers]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * schema:
- * type: integer
- * required: true
- * description: ไอดีลูกค้า
- * responses:
- * 200:
- * description: ข้อมูลลูกค้า
- * 404:
- * description: ไม่พบข้อมูล
- * put:
- * summary: แก้ไขข้อมูลลูกค้า
- * tags: [Customers]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * requestBody:
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * fullname:
- * type: string
- * address:
- * type: string
- * phone:
- * type: string
- * email:
- * type: string
- * responses:
- * 200:
- * description: อัปเดตข้อมูลสำเร็จ
- * delete:
- * summary: ลบข้อมูลลูกค้า
- * tags: [Customers]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * responses:
- * 200:
- * description: ลบข้อมูลสำเร็จ
- */
 router.get('/:id', auth, async (req, res) => {
   try {
     const [rows] = await db.query('SELECT id, username, fullname, address, phone, email FROM tbl_customers WHERE id = ?', [req.params.id]);

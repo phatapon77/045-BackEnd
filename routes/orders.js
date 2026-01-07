@@ -7,65 +7,50 @@ const auth = require('../middleware/auth');
 /**
  * @swagger
  * tags:
- * name: Orders
- * description: จัดการคำสั่งซื้อ
- */
-
-/**
- * @swagger
- * components:
- * schemas:
- * Order:
- * type: object
- * required:
- * - customer_id
- * - restaurant_id
- * - menu_id
- * - quantity
- * - total_amount
- * properties:
- * customer_id:
- * type: integer
- * restaurant_id:
- * type: integer
- * menu_id:
- * type: integer
- * quantity:
- * type: integer
- * total_amount:
- * type: number
- * format: float
- * order_status:
- * type: string
- * default: Pending
- */
-
-/**
- * @swagger
+ *   - name: Orders
+ *     description: Order endpoints
+ *
  * /api/orders:
- * get:
- * summary: ดูออเดอร์ทั้งหมด
- * tags: [Orders]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: สำเร็จ
- * post:
- * summary: สร้างคำสั่งซื้อ
- * tags: [Orders]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/Order'
- * responses:
- * 201:
- * description: สร้างออเดอร์สำเร็จ
+ *   get:
+ *     summary: Get all orders
+ *     tags: [Orders]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *   post:
+ *     summary: Create an order
+ *     tags: [Orders]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *             required: [items]
+ *     responses:
+ *       '201':
+ *         description: Created
+ *
+ * /api/orders/{id}:
+ *   get:
+ *     summary: Get order by id
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: OK
  */
+
 router.get('/', auth, async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM tbl_orders'); 
@@ -89,58 +74,58 @@ router.post('/', auth, async (req, res) => {
 /**
  * @swagger
  * /api/orders/{id}:
- * get:
- * summary: ดูรายละเอียดออเดอร์ตาม ID
- * tags: [Orders]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * responses:
- * 200:
- * description: พบออเดอร์
- * put:
- * summary: อัปเดตสถานะออเดอร์
- * tags: [Orders]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * order_status:
- * type: string
- * example: "Completed"
- * responses:
- * 200:
- * description: อัปเดตสถานะสำเร็จ
- * delete:
- * summary: ยกเลิก/ลบออเดอร์
- * tags: [Orders]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * responses:
- * 200:
- * description: ลบสำเร็จ
+ *   get:
+ *     summary: ดูรายละเอียดออเดอร์ตาม ID
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: พบออเดอร์
+ *   put:
+ *     summary: อัปเดตสถานะออเดอร์
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               order_status:
+ *                 type: string
+ *                 example: "Completed"
+ *     responses:
+ *       '200':
+ *         description: อัปเดตสถานะสำเร็จ
+ *   delete:
+ *     summary: ยกเลิก/ลบออเดอร์
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: ลบสำเร็จ
  */
 router.get('/:id', auth, async (req, res) => {
     try {

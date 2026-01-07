@@ -11,8 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Swagger Route
-// เรียกใช้ swaggerUi.setup โดยส่งค่า config ที่ import เข้ามา
+// Swagger Route (use swaggerDocs, remove undefined swaggerSpec)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
@@ -32,10 +31,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// Start Server
+// Start Server (only once; keep compatibility with test env)
 if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
+  });
 }
 
 module.exports = app;

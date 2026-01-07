@@ -7,52 +7,74 @@ const auth = require('../middleware/auth');
 /**
  * @swagger
  * tags:
- * name: Restaurants
- * description: จัดการข้อมูลร้านอาหาร
- */
-
-/**
- * @swagger
- * components:
- * schemas:
- * Restaurant:
- * type: object
- * required:
- * - name
- * properties:
- * name:
- * type: string
- * address:
- * type: string
- * phone:
- * type: string
- * menu_details:
- * type: string
- */
-
-/**
- * @swagger
+ *   - name: Restaurants
+ *     description: Restaurant endpoints
+ *
  * /api/restaurants:
- * get:
- * summary: ดูรายชื่อร้านอาหารทั้งหมด
- * tags: [Restaurants]
- * responses:
- * 200:
- * description: สำเร็จ
- * post:
- * summary: เพิ่มร้านอาหารใหม่
- * tags: [Restaurants]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/Restaurant'
- * responses:
- * 201:
- * description: สร้างร้านสำเร็จ
+ *   get:
+ *     summary: Get all restaurants
+ *     tags: [Restaurants]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *   post:
+ *     summary: Create a restaurant
+ *     tags: [Restaurants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *             required: [name]
+ *     responses:
+ *       '201':
+ *         description: Created
+ *
+ * /api/restaurants/{id}:
+ *   get:
+ *     summary: Get restaurant by id
+ *     tags: [Restaurants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '404':
+ *         description: Not Found
+ *   put:
+ *     summary: Update a restaurant
+ *     tags: [Restaurants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *             required: [name]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '404':
+ *         description: Not Found
+ *   delete:
+ *     summary: Delete a restaurant
+ *     tags: [Restaurants]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *       '404':
+ *         description: Not Found
  */
 router.get('/', async (req, res) => {
     try {
@@ -77,54 +99,54 @@ router.post('/', auth, async (req, res) => {
 /**
  * @swagger
  * /api/restaurants/{id}:
- * get:
- * summary: ดูข้อมูลร้านอาหารตาม ID
- * tags: [Restaurants]
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * responses:
- * 200:
- * description: พบข้อมูล
- * 404:
- * description: ไม่พบร้านอาหาร
- * put:
- * summary: แก้ไขข้อมูลร้านอาหาร
- * tags: [Restaurants]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/Restaurant'
- * responses:
- * 200:
- * description: อัปเดตสำเร็จ
- * delete:
- * summary: ลบร้านอาหาร
- * tags: [Restaurants]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * responses:
- * 200:
- * description: ลบสำเร็จ
+ *   get:
+ *     summary: ดูข้อมูลร้านอาหารตาม ID
+ *     tags: [Restaurants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: พบข้อมูล
+ *       '404':
+ *         description: ไม่พบร้านอาหาร
+ *   put:
+ *     summary: แก้ไขข้อมูลร้านอาหาร
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Restaurant'
+ *     responses:
+ *       '200':
+ *         description: อัปเดตสำเร็จ
+ *   delete:
+ *     summary: ลบร้านอาหาร
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: ลบสำเร็จ
  */
 router.get('/:id', async (req, res) => {
     try {

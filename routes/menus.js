@@ -7,57 +7,97 @@ const auth = require('../middleware/auth');
 /**
  * @swagger
  * tags:
- * name: Menus
- * description: จัดการเมนูอาหาร
+ *   - name: Menus
+ *     description: Menu related endpoints
+ *
+ * /api/menus:
+ *   get:
+ *     summary: Get all menus
+ *     tags: [Menus]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *   post:
+ *     summary: Create a menu
+ *     tags: [Menus]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *             required: [name, price]
+ *     responses:
+ *       '201':
+ *         description: Created
+ *
+ * /api/menus/{id}:
+ *   get:
+ *     summary: Get a menu by id
+ *     tags: [Menus]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: OK
  */
 
 /**
  * @swagger
  * components:
- * schemas:
- * Menu:
- * type: object
- * required:
- * - restaurant_id
- * - menu_name
- * - price
- * properties:
- * restaurant_id:
- * type: integer
- * menu_name:
- * type: string
- * description:
- * type: string
- * price:
- * type: number
- * format: float
- * category:
- * type: string
+ *   schemas:
+ *     Menu:
+ *       type: object
+ *       required:
+ *         - restaurant_id
+ *         - menu_name
+ *         - price
+ *       properties:
+ *         restaurant_id:
+ *           type: integer
+ *         menu_name:
+ *           type: string
+ *         description:
+ *           type: string
+ *         price:
+ *           type: number
+ *           format: float
+ *         category:
+ *           type: string
  */
 
 /**
  * @swagger
  * /api/menus:
- * get:
- * summary: ดูรายการเมนูทั้งหมด
- * tags: [Menus]
- * responses:
- * 200:
- * description: รายการเมนู
- * post:
- * summary: เพิ่มเมนูใหม่
- * tags: [Menus]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/Menu'
- * responses:
- * 201:
- * description: สร้างเมนูสำเร็จ
+ *   get:
+ *     summary: ดูรายการเมนูทั้งหมด
+ *     tags: [Menus]
+ *     responses:
+ *       '200':
+ *         description: รายการเมนู
+ *   post:
+ *     summary: เพิ่มเมนูใหม่
+ *     tags: [Menus]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Menu'
+ *     responses:
+ *       '201':
+ *         description: สร้างเมนูสำเร็จ
  */
 router.get('/', async (req, res) => {
     try {
@@ -82,40 +122,40 @@ router.post('/', auth, async (req, res) => {
 /**
  * @swagger
  * /api/menus/{id}:
- * put:
- * summary: แก้ไขเมนู
- * tags: [Menus]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/Menu'
- * responses:
- * 200:
- * description: อัปเดตสำเร็จ
- * delete:
- * summary: ลบเมนู
- * tags: [Menus]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * responses:
- * 200:
- * description: ลบสำเร็จ
+ *   put:
+ *     summary: แก้ไขเมนู
+ *     tags: [Menus]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Menu'
+ *     responses:
+ *       '200':
+ *         description: อัปเดตสำเร็จ
+ *   delete:
+ *     summary: ลบเมนู
+ *     tags: [Menus]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: ลบสำเร็จ
  */
 router.put('/:id', auth, async (req, res) => {
     const { restaurant_id, menu_name, description, price, category } = req.body;

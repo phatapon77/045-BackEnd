@@ -7,55 +7,48 @@ const auth = require('../middleware/auth');
 /**
  * @swagger
  * tags:
- * name: Payments
- * description: จัดการการชำระเงิน
- */
-
-/**
- * @swagger
- * components:
- * schemas:
- * Payment:
- * type: object
- * required:
- * - order_id
- * - payment_method
- * properties:
- * order_id:
- * type: integer
- * payment_method:
- * type: string
- * example: "Credit Card"
- * payment_status:
- * type: string
- * default: "Pending"
- */
-
-/**
- * @swagger
+ *   - name: Payments
+ *     description: Payment endpoints
+ *
  * /api/payments:
- * get:
- * summary: ดูรายการชำระเงินทั้งหมด
- * tags: [Payments]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: สำเร็จ
- * post:
- * summary: สร้างรายการชำระเงิน
- * tags: [Payments]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/Payment'
- * responses:
- * 201:
- * description: บันทึกการชำระเงินสำเร็จ
+ *   get:
+ *     summary: Get all payments
+ *     tags: [Payments]
+ *     responses:
+ *       '200':
+ *         description: OK
+ *   post:
+ *     summary: Create a payment
+ *     tags: [Payments]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *             required: [orderId, amount]
+ *     responses:
+ *       '201':
+ *         description: Created
+ *
+ * /api/payments/{id}:
+ *   get:
+ *     summary: Get payment by id
+ *     tags: [Payments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: OK
  */
 router.get('/', auth, async (req, res) => {
     try {
@@ -80,30 +73,30 @@ router.post('/', auth, async (req, res) => {
 /**
  * @swagger
  * /api/payments/{id}:
- * put:
- * summary: อัปเดตสถานะการชำระเงิน
- * tags: [Payments]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: integer
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * payment_status:
- * type: string
- * example: "Paid"
- * responses:
- * 200:
- * description: อัปเดตสถานะสำเร็จ
+ *   put:
+ *     summary: อัปเดตสถานะการชำระเงิน
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               payment_status:
+ *                 type: string
+ *                 example: "Paid"
+ *     responses:
+ *       '200':
+ *         description: อัปเดตสถานะสำเร็จ
  */
 router.put('/:id', auth, async (req, res) => {
     const { payment_status } = req.body;
