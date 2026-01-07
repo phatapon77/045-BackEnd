@@ -1,9 +1,7 @@
-// index.js
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocs = require('./config/swagger'); // Import ไฟล์ config ที่เราแยกไป
-require('dotenv').config();
+const swaggerSpecs = require('./config/swagger');
 
 const app = express();
 
@@ -11,33 +9,34 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Swagger Route (use swaggerDocs, remove undefined swaggerSpec)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Routes
+// Use Routes (เปิดใช้งาน)
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/restaurants', require('./routes/restaurants'));
 app.use('/api/menus', require('./routes/menus'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/shippings', require('./routes/shippings'));
+// ==========================================
+// 🚀 Swagger UI Setup (Vercel Fix)
+// ==========================================
+const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
+const JS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js";
+const JS_PRESET_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js";
 
-// Health Check
-app.get('/', (req, res) => res.send('API Running... Docs at /api-docs'));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpecs, {
+    customCssUrl: CSS_URL,
+    customJs: [JS_URL, JS_PRESET_URL],
+    customSiteTitle: "Food API Docs"
+  })
+);
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+// Default Route (เผื่อเข้าหน้าแรก)
+app.get('/', (req, res) => {
+    res.send('API Backend is running! Access docs at <a href="/api-docs">/api-docs</a>');
 });
-
-// Start Server (only once; keep compatibility with test env)
-if (process.env.NODE_ENV !== 'test') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Swagger Docs available at http://localhost:${PORT}/api-docs`);
-  });
-}
 
 module.exports = app;
