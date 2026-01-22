@@ -74,7 +74,7 @@ app.get('/api/restaurants', async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM tbl_restaurants');
     const shops = rows.map(shop => ({
       ...shop,
-      // ✅ แก้ไข: ใช้ shop.image ตรงๆ (เพราะใน DB ชื่อ image)
+      // ✅ ใช้ shop.image ตรงๆ
       image: shop.image || 'https://placehold.co/600x400/orange/white?text=' + encodeURIComponent(shop.name)
     }));
     res.json(shops);
@@ -105,7 +105,6 @@ app.get('/api/restaurants/:id', async (req, res) => {
 app.post('/api/restaurants', async (req, res) => {
   const { name, address, phone, image } = req.body;
   try {
-    // ✅ แก้ไข: เปลี่ยน menu_details เป็น image ให้ตรงกับ DB
     const [result] = await pool.query(
       `INSERT INTO tbl_restaurants (name, address, phone, image) VALUES (?, ?, ?, ?)`,
       [name, address, phone, image || '']
@@ -121,7 +120,6 @@ app.put('/api/restaurants/:id', async (req, res) => {
   const { id } = req.params;
   const { name, address, phone, image } = req.body;
   try {
-    // ✅ แก้ไข: เปลี่ยน menu_details เป็น image
     await pool.query(
       'UPDATE tbl_restaurants SET name = ?, address = ?, phone = ?, image = ? WHERE id = ?',
       [name, address, phone, image, id]
@@ -161,23 +159,29 @@ app.put('/api/restaurants/:id/status', async (req, res) => {
 
 // --- Menus ---
 
-// 6. ดึงเมนูตามร้าน
+// 6. ดึงเมนูตามร้าน (✅ แก้ไขจุดนี้ให้ชื่อเมนูขึ้น)
 app.get('/api/menus', async (req, res) => {
   const { restaurant_id } = req.query;
   try {
     const [rows] = await pool.query('SELECT * FROM tbl_menus WHERE restaurant_id = ?', [restaurant_id]);
-    res.json(rows);
+    
+    // ✅ เพิ่มการแปลงข้อมูล: สร้าง menu_name ให้หน้าเว็บใช้งานได้
+    const menus = rows.map(menu => ({
+      ...menu,
+      menu_name: menu.name, // ตัวนี้สำคัญ! หน้าเว็บรอดึงตัวนี้
+      title: menu.name      
+    }));
+
+    res.json(menus);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ✅ 7. เพิ่มเมนู
+// 7. เพิ่มเมนู
 app.post('/api/menus', async (req, res) => {
-  // รับ menu_name จาก frontend แต่ insert ลง column name ใน DB
   const { restaurant_id, menu_name, description, price, category, image } = req.body; 
   try {
-    // ✅ แก้ไข: column ใน DB ชื่อ "name" ไม่ใช่ "menu_name"
     await pool.query(
       `INSERT INTO tbl_menus (restaurant_id, name, price, category, image) 
        VALUES (?, ?, ?, ?, ?)`,
