@@ -2,12 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Database Connection ---
+// ==========================================
+// 1. เชื่อมต่อฐานข้อมูล
+// ==========================================
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -19,7 +24,6 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Test Connection
 pool.getConnection()
   .then(conn => {
     console.log("✅ Database connected successfully!");
@@ -30,17 +34,48 @@ pool.getConnection()
   });
 
 // ==========================================
-//                 ROUTES
+// 2. ตั้งค่าระบบอัปโหลดรูปภาพ (Multer)
+// ==========================================
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, 'image-' + Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ==========================================
+// 3. ROUTES (API)
 // ==========================================
 
-// 1. ดึงรายชื่อร้านค้าทั้งหมด
+// --- Upload Image ---
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'กรุณาเลือกไฟล์รูปภาพ' });
+    }
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+});
+
+// --- Restaurants ---
+
+// 1. ดึงร้านค้าทั้งหมด
 app.get('/api/restaurants', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM tbl_restaurants');
-    // ใส่รูป Default ถ้าไม่มี
     const shops = rows.map(shop => ({
       ...shop,
-      image: shop.menu_details || 'https://placehold.co/600x400/orange/white?text=' + encodeURIComponent(shop.name)
+      // ✅ แก้ไข: ใช้ shop.image ตรงๆ (เพราะใน DB ชื่อ image)
+      image: shop.image || 'https://placehold.co/600x400/orange/white?text=' + encodeURIComponent(shop.name)
     }));
     res.json(shops);
   } catch (error) {
@@ -48,7 +83,85 @@ app.get('/api/restaurants', async (req, res) => {
   }
 });
 
-// 2. ดึงเมนูตาม Shop ID
+// 1.5 ดึงข้อมูลร้านค้าตาม ID
+app.get('/api/restaurants/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT * FROM tbl_restaurants WHERE id = ?', [id]);
+    
+    if (rows.length > 0) {
+      const shop = rows[0];
+      shop.image = shop.image || 'https://placehold.co/600x400/orange/white?text=' + encodeURIComponent(shop.name);
+      res.json([shop]);
+    } else {
+      res.status(404).json({ error: 'Shop not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. สร้างร้านค้าใหม่
+app.post('/api/restaurants', async (req, res) => {
+  const { name, address, phone, image } = req.body;
+  try {
+    // ✅ แก้ไข: เปลี่ยน menu_details เป็น image ให้ตรงกับ DB
+    const [result] = await pool.query(
+      `INSERT INTO tbl_restaurants (name, address, phone, image) VALUES (?, ?, ?, ?)`,
+      [name, address, phone, image || '']
+    );
+    res.json({ success: true, id: result.insertId, message: 'Shop created!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. แก้ไขข้อมูลร้านค้า
+app.put('/api/restaurants/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, address, phone, image } = req.body;
+  try {
+    // ✅ แก้ไข: เปลี่ยน menu_details เป็น image
+    await pool.query(
+      'UPDATE tbl_restaurants SET name = ?, address = ?, phone = ?, image = ? WHERE id = ?',
+      [name, address, phone, image, id]
+    );
+    res.json({ success: true, message: 'Shop updated successfully!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 4. ลบร้านค้า
+app.delete('/api/restaurants/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM tbl_restaurants WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Shop deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 5. อัปเดตสถานะร้าน
+app.put('/api/restaurants/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; 
+  try {
+    await pool.query(
+      'UPDATE tbl_restaurants SET status = ? WHERE id = ?',
+      [status, id]
+    );
+    res.json({ success: true, message: 'Updated status successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Menus ---
+
+// 6. ดึงเมนูตามร้าน
 app.get('/api/menus', async (req, res) => {
   const { restaurant_id } = req.query;
   try {
@@ -59,7 +172,38 @@ app.get('/api/menus', async (req, res) => {
   }
 });
 
-// 3. สั่งอาหาร (Create Order) - ใช้ Transaction
+// ✅ 7. เพิ่มเมนู
+app.post('/api/menus', async (req, res) => {
+  // รับ menu_name จาก frontend แต่ insert ลง column name ใน DB
+  const { restaurant_id, menu_name, description, price, category, image } = req.body; 
+  try {
+    // ✅ แก้ไข: column ใน DB ชื่อ "name" ไม่ใช่ "menu_name"
+    await pool.query(
+      `INSERT INTO tbl_menus (restaurant_id, name, price, category, image) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [restaurant_id, menu_name, price, category, image || '']
+    );
+    res.json({ success: true, message: 'Menu added successfully!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 8. ลบเมนู
+app.delete('/api/menus/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM tbl_menus WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Menu deleted successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Orders & Users ---
+
+// 9. สั่งอาหาร
 app.post('/api/orders', async (req, res) => {
   const { customer_id, restaurant_id, total_amount, items } = req.body;
   const connection = await pool.getConnection();
@@ -95,92 +239,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// 4. สร้างร้านค้าใหม่ (Admin Only)
-app.post('/api/restaurants', async (req, res) => {
-  const { name, address, phone, image } = req.body;
-  try {
-    const [result] = await pool.query(
-      `INSERT INTO tbl_restaurants (name, address, phone, menu_details) VALUES (?, ?, ?, ?)`,
-      [name, address, phone, image || '']
-    );
-    res.json({ success: true, id: result.insertId, message: 'Shop created!' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 5. ลบร้านค้า
-app.delete('/api/restaurants/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query('DELETE FROM tbl_restaurants WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Shop deleted' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ✅ 6. เข้าสู่ระบบ (Login API) - เพิ่มใหม่
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  
-  try {
-    // เช็ค username และ password ใน tbl_customers
-    const [users] = await pool.query(
-      'SELECT id, username, fullname, status FROM tbl_customers WHERE username = ? AND password = ?', 
-      [username, password]
-    );
-
-    if (users.length > 0) {
-      const user = users[0];
-      res.json({ 
-        success: true, 
-        user: {
-          id: user.id,
-          username: user.username,
-          fullname: user.fullname,
-          role: user.status // ส่งค่า status ไปให้ Frontend ใช้เช็คสิทธิ์
-        } 
-      });
-    } else {
-      res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// --- ส่วนจัดการเมนู (Admin: Menu Management) ---
-
-// 7. เพิ่มเมนูอาหารใหม่
-app.post('/api/menus', async (req, res) => {
-  const { restaurant_id, menu_name, description, price, category } = req.body;
-  try {
-    await pool.query(
-      `INSERT INTO tbl_menus (restaurant_id, menu_name, description, price, category) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [restaurant_id, menu_name, description, price, category]
-    );
-    res.json({ success: true, message: 'Menu added successfully!' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 8. ลบเมนูอาหาร
-app.delete('/api/menus/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query('DELETE FROM tbl_menus WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Menu deleted successfully!' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// --- ส่วน Dashboard (Admin) ---
-
-// 9. ดึงออเดอร์ทั้งหมด (พร้อมชื่อลูกค้าและชื่อร้าน)
+// 10. ดึงออเดอร์ (Dashboard)
 app.get('/api/orders', async (req, res) => {
   try {
     const [orders] = await pool.query(`
@@ -197,8 +256,36 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
+// 11. Login
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const [users] = await pool.query(
+      'SELECT id, username, fullname, status FROM tbl_customers WHERE username = ? AND password = ?', 
+      [username, password]
+    );
+
+    if (users.length > 0) {
+      const user = users[0];
+      res.json({ 
+        success: true, 
+        user: {
+          id: user.id,
+          username: user.username,
+          fullname: user.fullname,
+          role: user.status 
+        } 
+      });
+    } else {
+      res.status(401).json({ success: false, message: 'Login failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==========================================
-//               START SERVER
+// 4. Start Server
 // ==========================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
